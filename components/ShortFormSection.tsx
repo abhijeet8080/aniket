@@ -3,6 +3,10 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
+const ease = [0.22, 1, 0.36, 1] as const;
+
+import { Iphone } from "@/components/ui/iphone";
+
 const VIDEOS = [
   {
     id: 0,
@@ -74,86 +78,76 @@ export default function ShortFormSection() {
     setCurrent(next);
   };
 
-  const handleDragEnd = (_: unknown, info: { offset: { y: number }; velocity: { y: number } }) => {
-    const swipe = info.offset.y;
-    const velocity = info.velocity.y;
-    if (swipe < -40 || velocity < -300) goTo(current + 1);
-    else if (swipe > 40 || velocity > 300) goTo(current - 1);
+  const handleDragEnd = (
+    _: unknown,
+    info: { offset: { y: number }; velocity: { y: number } }
+  ) => {
+    if (info.offset.y < -40 || info.velocity.y < -300) goTo(current + 1);
+    else if (info.offset.y > 40 || info.velocity.y > 300) goTo(current - 1);
   };
 
   const video = VIDEOS[current];
 
   return (
-    <section className="px-4 py-24">
+    <section className="overflow-hidden px-4 py-24">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-4 flex items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease }}
+          className="mb-4 flex items-center gap-4"
+        >
           <span className="h-px w-12 bg-blue-500/50" />
           <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-400">
             Short Form
           </span>
-        </div>
-        <div className="mb-16 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-4xl font-black text-white md:text-5xl">
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+          className="mb-16 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <motion.h2
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
+            className="text-4xl font-black text-foreground md:text-5xl"
+          >
             Reels &amp; Stories
-          </h2>
-          <p className="max-w-xs text-sm leading-relaxed text-white/35">
-            Swipe up &amp; down to explore. Scroll-stopping content for social.
-          </p>
-        </div>
+          </motion.h2>
+          <motion.p
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
+            className="max-w-xs text-sm leading-relaxed text-foreground/50"
+          >
+            Swipe up &amp; down to explore scroll-stopping content.
+          </motion.p>
+        </motion.div>
 
-        {/* Phone + nav */}
-        <div className="flex flex-col items-center gap-8">
-          {/* Glow behind phone */}
+        {/* Phone + controls */}
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.7, ease, delay: 0.1 }}
+          className="flex flex-col items-center gap-8"
+        >
           <div className="relative flex items-center justify-center">
+            {/* Ambient glow */}
             <motion.div
               key={current}
-              animate={{ background: `radial-gradient(ellipse 60% 50% at 50% 50%, ${video.glowColor}, transparent 70%)` }}
+              animate={{
+                background: `radial-gradient(ellipse 60% 55% at 50% 50%, ${video.glowColor}, transparent 70%)`,
+              }}
               transition={{ duration: 0.6 }}
               className="pointer-events-none absolute inset-0 scale-150"
             />
 
-            {/* Phone shell */}
-            <div
-              className="relative overflow-hidden"
-              style={{
-                width: 270,
-                height: 584,
-                borderRadius: 52,
-                background: "#1a1a1c",
-                boxShadow:
-                  "0 0 0 1.5px rgba(255,255,255,0.12), 0 60px 120px rgba(0,0,0,0.7)",
-              }}
-            >
-              {/* Physical buttons */}
-              <div className="absolute -left-[3.5px] top-28 h-8 w-[3.5px] rounded-l-full bg-zinc-600" />
-              <div className="absolute -left-[3.5px] top-40 h-12 w-[3.5px] rounded-l-full bg-zinc-600" />
-              <div className="absolute -left-[3.5px] top-56 h-12 w-[3.5px] rounded-l-full bg-zinc-600" />
-              <div className="absolute -right-[3.5px] top-36 h-16 w-[3.5px] rounded-r-full bg-zinc-600" />
-
-              {/* Dynamic island */}
-              <div
-                className="absolute z-30 left-1/2 -translate-x-1/2"
-                style={{ top: 14, width: 96, height: 30, borderRadius: 22, background: "#000" }}
-              />
-
-              {/* Status bar */}
-              <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-8 pt-4 text-white">
-                <span className="text-[11px] font-bold">9:41</span>
-                <div className="flex items-center gap-1.5 text-white">
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-[11px] w-[11px]">
-                    <path d="M1.5 8.5C5 5 8.5 3 12 3s7 2 10.5 5.5L21 11c-2.5-2.5-5.5-4-9-4s-6.5 1.5-9 4L1.5 8.5zm4 4C7.5 10.5 9.5 9 12 9s4.5 1.5 6.5 3.5L17 14c-1.5-1.5-3-2-5-2s-3.5.5-5 2L5.5 12.5zm4.5 4c.5-.5 1.5-1 2-1s1.5.5 2 1L12 18l-2-1.5z" />
-                  </svg>
-                  <svg viewBox="0 0 24 24" fill="currentColor" className="h-[11px] w-[14px]">
-                    <rect x="1" y="6" width="16" height="12" rx="2" opacity="0.35" />
-                    <rect x="2" y="7" width="11" height="10" rx="1.5" />
-                    <path d="M23 10v4a2 2 0 000-4z" />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Swipeable content — clipped to screen */}
-              <div className="absolute inset-0 overflow-hidden rounded-[52px]">
+            {/* iPhone frame */}
+            <div className="w-[270px]">
+            <Iphone className="drop-shadow-2xl">
+              <div className="relative h-full w-full overflow-hidden bg-black">
                 <AnimatePresence custom={direction} mode="popLayout">
                   <motion.div
                     key={current}
@@ -169,7 +163,7 @@ export default function ShortFormSection() {
                     onDragEnd={handleDragEnd}
                     className="absolute inset-0 cursor-grab active:cursor-grabbing"
                   >
-                    {/* Video bg */}
+                    {/* Gradient bg */}
                     <div className={`absolute inset-0 bg-gradient-to-b ${video.gradient}`} />
                     <div
                       className="absolute inset-0"
@@ -179,7 +173,7 @@ export default function ShortFormSection() {
                       }}
                     />
 
-                    {/* Right actions */}
+                    {/* Right action buttons */}
                     <div className="absolute bottom-28 right-3 z-10 flex flex-col items-center gap-5">
                       {[
                         {
@@ -217,7 +211,7 @@ export default function ShortFormSection() {
                     </div>
 
                     {/* Bottom overlay */}
-                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pb-10 pt-20 px-4">
+                    <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pb-8 pt-16 px-4">
                       <div className="mb-2 flex items-center gap-2">
                         <div className="h-7 w-7 rounded-full border border-white/30 bg-white/20 backdrop-blur-sm" />
                         <span className="text-[13px] font-bold text-white">{video.username}</span>
@@ -236,44 +230,45 @@ export default function ShortFormSection() {
                         {video.caption}
                       </p>
                       <div className="flex items-center gap-1.5 text-white/45">
-                        <svg viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3 animate-spin" style={{ animationDuration: "3s" }}>
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="h-3 w-3 animate-spin"
+                          style={{ animationDuration: "3s" }}
+                        >
                           <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                         </svg>
                         <span className="text-[10px]">Original Sound · {video.username}</span>
                       </div>
                     </div>
 
-                    {/* Duration badge */}
-                    <div className="absolute left-4 top-16 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-sm">
+                    {/* Duration + progress dots */}
+                    <div className="absolute left-4 top-14 rounded-md bg-black/40 px-2 py-0.5 text-[10px] font-medium text-white/80 backdrop-blur-sm">
                       {video.duration}
+                    </div>
+                    <div className="absolute right-2.5 top-1/2 z-10 -translate-y-1/2 flex flex-col gap-1.5">
+                      {VIDEOS.map((_, i) => (
+                        <motion.div
+                          key={i}
+                          animate={{ height: i === current ? 20 : 4, opacity: i === current ? 1 : 0.3 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-1 rounded-full bg-white"
+                        />
+                      ))}
                     </div>
                   </motion.div>
                 </AnimatePresence>
               </div>
-
-              {/* Home indicator (always on top) */}
-              <div className="absolute bottom-[10px] left-1/2 z-30 -translate-x-1/2 h-[4px] w-28 rounded-full bg-white/25" />
-
-              {/* Progress dots — right edge */}
-              <div className="absolute right-2.5 top-1/2 z-30 -translate-y-1/2 flex flex-col gap-1.5">
-                {VIDEOS.map((_, i) => (
-                  <motion.div
-                    key={i}
-                    animate={{ height: i === current ? 20 : 4, opacity: i === current ? 1 : 0.3 }}
-                    transition={{ duration: 0.3 }}
-                    className="w-1 rounded-full bg-white"
-                  />
-                ))}
-              </div>
+            </Iphone>
             </div>
           </div>
 
-          {/* Up / Down controls */}
+          {/* Navigation controls */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => goTo(current - 1)}
               disabled={current === 0}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/40 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/40 transition-all hover:border-foreground/20 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-20"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -286,7 +281,7 @@ export default function ShortFormSection() {
                   key={i}
                   onClick={() => goTo(i)}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
-                    i === current ? "w-6 bg-blue-500" : "w-1.5 bg-white/20 hover:bg-white/40"
+                    i === current ? "w-6 bg-blue-500" : "w-1.5 bg-foreground/20 hover:bg-foreground/40"
                   }`}
                 />
               ))}
@@ -295,14 +290,14 @@ export default function ShortFormSection() {
             <button
               onClick={() => goTo(current + 1)}
               disabled={current === VIDEOS.length - 1}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/40 transition-all hover:border-white/20 hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-20"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/40 transition-all hover:border-foreground/20 hover:bg-foreground/10 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-20"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

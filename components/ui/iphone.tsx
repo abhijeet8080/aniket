@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react"
+import type { HTMLAttributes, ReactNode } from "react"
 
 const PHONE_WIDTH = 433
 const PHONE_HEIGHT = 882
@@ -19,17 +19,20 @@ const RADIUS_V = (SCREEN_RADIUS / SCREEN_HEIGHT) * 100
 export interface IphoneProps extends HTMLAttributes<HTMLDivElement> {
   src?: string
   videoSrc?: string
+  children?: ReactNode
 }
 
 export function Iphone({
   src,
   videoSrc,
+  children,
   className,
   style,
   ...props
 }: IphoneProps) {
   const hasVideo = !!videoSrc
   const hasMedia = hasVideo || !!src
+  const hasContent = hasMedia || !!children
 
   return (
     <div
@@ -82,14 +85,29 @@ export function Iphone({
         </div>
       )}
 
+      {!hasMedia && children && (
+        <div
+          className="absolute z-0 overflow-hidden"
+          style={{
+            left: `${LEFT_PCT}%`,
+            top: `${TOP_PCT}%`,
+            width: `${WIDTH_PCT}%`,
+            height: `${HEIGHT_PCT}%`,
+            borderRadius: `${RADIUS_H}% / ${RADIUS_V}%`,
+          }}
+        >
+          {children}
+        </div>
+      )}
+
       <svg
         viewBox={`0 0 ${PHONE_WIDTH} ${PHONE_HEIGHT}`}
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         className="absolute inset-0 size-full"
-        style={{ transform: "translateZ(0)" }}
+        style={{ transform: "translateZ(0)", pointerEvents: "none" }}
       >
-        <g mask={hasMedia ? "url(#screenPunch)" : undefined}>
+        <g mask={hasContent ? "url(#screenPunch)" : undefined}>
           <path
             d="M2 73C2 32.6832 34.6832 0 75 0H357C397.317 0 430 32.6832 430 73V809C430 849.317 397.317 882 357 882H75C34.6832 882 2 849.317 2 809V73Z"
             className="fill-[#E5E5E5] dark:fill-[#404040]"
@@ -125,7 +143,7 @@ export function Iphone({
         <path
           d={`M${SCREEN_X} 75C${SCREEN_X} 44.2101 46.2101 ${SCREEN_Y} 77 ${SCREEN_Y}H355C385.79 ${SCREEN_Y} 410.75 44.2101 410.75 75V807C410.75 837.79 385.79 862.75 355 862.75H77C46.2101 862.75 ${SCREEN_X} 837.79 ${SCREEN_X} 807V75Z`}
           className="fill-[#E5E5E5] stroke-[#E5E5E5] stroke-[0.5] dark:fill-[#404040] dark:stroke-[#404040]"
-          mask={hasMedia ? "url(#screenPunch)" : undefined}
+          mask={hasContent ? "url(#screenPunch)" : undefined}
         />
 
         <path

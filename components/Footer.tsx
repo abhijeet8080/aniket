@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 const NAV_LINKS = ["Home", "About", "Work", "Contact"];
 
 const SOCIALS = [
@@ -39,25 +43,38 @@ const SOCIALS = [
   },
 ];
 
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const colVariant = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
+};
+
 export default function Footer() {
   return (
-    <footer className="border-t border-white/6 px-4 pt-16 pb-8">
+    <footer className="border-t border-border px-4 pt-16 pb-8">
       <div className="mx-auto max-w-7xl">
         {/* Main grid */}
-        <div className="grid grid-cols-1 gap-12 sm:grid-cols-3 pb-14">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+          className="grid grid-cols-1 gap-12 sm:grid-cols-3 pb-14"
+        >
           {/* Brand */}
-          <div className="max-w-xs">
-            <div className="mb-4 text-xl font-bold text-white">
+          <motion.div variants={colVariant} className="max-w-xs">
+            <div className="mb-4 text-xl font-bold text-foreground">
               Aniket<span className="text-blue-500">.</span>
             </div>
-            <p className="text-sm leading-relaxed text-white/35">
+            <p className="text-sm leading-relaxed text-foreground/50">
               Crafting cinematic stories with precision and passion.
             </p>
-          </div>
+          </motion.div>
 
           {/* Navigation */}
-          <div>
-            <p className="mb-6 text-[11px] font-semibold tracking-[0.15em] uppercase text-white/30">
+          <motion.div variants={colVariant}>
+            <p className="mb-6 text-[11px] font-semibold tracking-[0.15em] uppercase text-foreground/40">
               Navigation
             </p>
             <ul className="space-y-4">
@@ -65,18 +82,18 @@ export default function Footer() {
                 <li key={link}>
                   <a
                     href="#"
-                    className="text-sm font-medium text-white/55 transition-colors duration-150 hover:text-white"
+                    className="text-sm font-medium text-foreground/60 transition-colors duration-150 hover:text-foreground"
                   >
                     {link}
                   </a>
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
 
           {/* Connect */}
-          <div>
-            <p className="mb-6 text-[11px] font-semibold tracking-[0.15em] uppercase text-white/30">
+          <motion.div variants={colVariant}>
+            <p className="mb-6 text-[11px] font-semibold tracking-[0.15em] uppercase text-foreground/40">
               Connect
             </p>
             <div className="flex gap-3">
@@ -85,20 +102,26 @@ export default function Footer() {
                   key={s.label}
                   href={s.href}
                   aria-label={s.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-white/50 transition-all duration-150 hover:border-white/20 hover:bg-white/10 hover:text-white"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/50 transition-all duration-150 hover:border-foreground/20 hover:bg-foreground/10 hover:text-foreground"
                 >
                   {s.icon}
                 </a>
               ))}
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col items-center justify-between gap-3 border-t border-white/6 pt-8 sm:flex-row">
-          <p className="text-xs text-white/25">© 2026 All rights reserved.</p>
-          <p className="text-xs text-white/25">Designed &amp; built with care</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="flex flex-col items-center justify-between gap-3 border-t border-border pt-8 sm:flex-row"
+        >
+          <p className="text-xs text-foreground/35">© 2026 All rights reserved.</p>
+          <p className="text-xs text-foreground/35">Designed &amp; built with care</p>
+        </motion.div>
       </div>
     </footer>
   );

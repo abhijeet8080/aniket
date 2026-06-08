@@ -1,17 +1,34 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { useEffect, useRef } from "react";
 
 const TAGS = ["Premiere Pro", "After Effects", "DaVinci Resolve", "Final Cut Pro", "Cinema 4D", "Motion"];
 
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 22 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.7, ease, delay },
+});
+
 export default function HeroSection() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isDarkRef = useRef(false);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    const updateIsDark = () => {
+      isDarkRef.current = document.documentElement.classList.contains("dark");
+    };
+    updateIsDark();
+    const themeObserver = new MutationObserver(updateIsDark);
+    themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
 
     const resize = () => {
       canvas.width = window.innerWidth;
@@ -31,10 +48,11 @@ export default function HeroSection() {
     let raf: number;
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const rgb = isDarkRef.current ? "255,255,255" : "10,10,40";
       for (const s of stars) {
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+        ctx.fillStyle = `rgba(${rgb},${s.opacity})`;
         ctx.fill();
         s.y -= s.speed;
         if (s.y + s.r < 0) {
@@ -49,6 +67,7 @@ export default function HeroSection() {
     return () => {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", resize);
+      themeObserver.disconnect();
     };
   }, []);
 
@@ -71,67 +90,71 @@ export default function HeroSection() {
 
       <div className="relative z-10 flex flex-col items-center">
         {/* Available badge */}
-        <div className="mb-10 inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-5 py-2 text-[11px] font-semibold tracking-widest uppercase text-white/50 backdrop-blur-sm">
+        <motion.div
+          {...fadeUp(0.1)}
+          className="mb-10 inline-flex items-center gap-2.5 rounded-full border border-foreground/10 bg-foreground/5 px-5 py-2 text-[11px] font-semibold tracking-widest uppercase text-foreground/50 backdrop-blur-sm"
+        >
           <span className="relative flex h-1.5 w-1.5">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-400" />
           </span>
           Available for Work
-        </div>
+        </motion.div>
 
         {/* Hero name */}
-        <h1
+        <motion.h1
+          {...fadeUp(0.22)}
           className="mb-6 font-black leading-[0.88] tracking-tight"
           style={{ fontSize: "clamp(3.8rem, 13vw, 8.5rem)" }}
         >
-          <span className="text-white">Aniket </span>
+          <span className="text-foreground">Aniket </span>
           <span style={{ color: "#3B82F6" }}>Patil</span>
-        </h1>
+        </motion.h1>
 
         {/* Subtitle */}
-        <p className="mb-10 max-w-[480px] text-[15px] leading-relaxed text-white/40">
+        <motion.p
+          {...fadeUp(0.34)}
+          className="mb-10 max-w-[480px] text-[15px] leading-relaxed text-foreground/50"
+        >
           Video editor crafting compelling visual stories
           <br className="hidden sm:block" />
           that captivate audiences and elevate brands.
-        </p>
+        </motion.p>
 
         {/* CTAs */}
-        <div className="mb-16 flex flex-wrap items-center justify-center gap-3">
+        <motion.div {...fadeUp(0.44)} className="mb-16 flex flex-wrap items-center justify-center gap-3">
           <button className="group flex items-center gap-2 rounded-full bg-blue-500 px-8 py-3.5 text-sm font-semibold text-white transition-all duration-200 hover:bg-blue-400 hover:shadow-[0_0_24px_rgba(59,130,246,0.4)]">
             View Portfolio
-            <span className="transition-transform duration-200 group-hover:translate-x-0.5">
-              →
-            </span>
+            <span className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </button>
-          <button className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-8 py-3.5 text-sm font-semibold text-white/70 backdrop-blur-sm transition-all duration-200 hover:bg-white/10 hover:text-white">
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.8}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-              />
+          <button className="flex items-center gap-2 rounded-full border border-foreground/15 bg-foreground/5 px-8 py-3.5 text-sm font-semibold text-foreground/70 backdrop-blur-sm transition-all duration-200 hover:bg-foreground/10 hover:text-foreground">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             Contact for Work
           </button>
-        </div>
+        </motion.div>
 
-        {/* Tech tags */}
-        <div className="flex max-w-lg flex-wrap justify-center gap-2">
+        {/* Tech tags — staggered */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.54 } } }}
+          className="flex max-w-lg flex-wrap justify-center gap-2"
+        >
           {TAGS.map((tag) => (
-            <span
+            <motion.span
               key={tag}
-              className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[11px] font-medium tracking-wide text-white/35"
+              variants={{
+                hidden: { opacity: 0, scale: 0.88 },
+                visible: { opacity: 1, scale: 1, transition: { duration: 0.4, ease } },
+              }}
+              className="rounded-full border border-foreground/10 bg-foreground/5 px-4 py-1.5 text-[11px] font-medium tracking-wide text-foreground/40"
             >
               {tag}
-            </span>
+            </motion.span>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

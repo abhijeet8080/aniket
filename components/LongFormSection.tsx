@@ -2,7 +2,8 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
-// slideVariants drives the left/right transition between videos
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 import { Safari } from "@/components/ui/safari";
 
@@ -41,23 +42,47 @@ export default function LongFormSection() {
     <section className="overflow-hidden px-4 py-24">
       <div className="mx-auto max-w-7xl">
         {/* Header */}
-        <div className="mb-4 flex items-center gap-4">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.5, ease }}
+          className="mb-4 flex items-center gap-4"
+        >
           <span className="h-px w-12 bg-blue-500/50" />
           <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-blue-400">
             Long Form
           </span>
-        </div>
-        <div className="mb-16 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <h2 className="text-4xl font-black text-white md:text-5xl">
+        </motion.div>
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+          className="mb-16 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"
+        >
+          <motion.h2
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
+            className="text-4xl font-black text-foreground md:text-5xl"
+          >
             Films &amp; Commercials
-          </h2>
-          <p className="max-w-xs text-sm leading-relaxed text-white/35">
+          </motion.h2>
+          <motion.p
+            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } } }}
+            className="max-w-xs text-sm leading-relaxed text-foreground/50"
+          >
             Swipe left &amp; right to explore cinematic long-form work.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Safari browser + controls */}
-        <div className="flex flex-col items-center gap-8">
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-40px" }}
+          transition={{ duration: 0.7, ease, delay: 0.1 }}
+          className="flex flex-col items-center gap-8"
+        >
           <div className="relative w-full max-w-4xl">
             {/* Ambient glow */}
             <motion.div
@@ -103,12 +128,12 @@ export default function LongFormSection() {
                 className={`h-1.5 rounded-full transition-all duration-300 ${
                   i === current
                     ? "w-6 bg-blue-500"
-                    : "w-1.5 bg-white/20 hover:bg-white/40"
+                    : "w-1.5 bg-foreground/20 hover:bg-foreground/40"
                 }`}
               />
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );
