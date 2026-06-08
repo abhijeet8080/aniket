@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import { ModeToggle } from "@/components/mode-toggle";
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler";
 
 import NavHeader from "./Navheader";
 import { ShimmerButton } from "./ui/shimmer-button";
@@ -29,7 +29,11 @@ const Navbar = () => {
 
           {/* Right side */}
           <div className="flex shrink-0 items-center gap-2">
-            <ModeToggle />
+            <AnimatedThemeToggler
+              variant="circle"
+              duration={500}
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-foreground/10 bg-foreground/5 text-foreground/60 transition-colors hover:text-foreground [&>svg]:h-[18px] [&>svg]:w-[18px]"
+            />
             <ShimmerButton className="hidden h-9 px-4 text-sm md:flex">
               Let&apos;s Talk
             </ShimmerButton>
