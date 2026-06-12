@@ -1,4 +1,4 @@
-import AboutSection from "@/components/AboutSection";
+import AboutMeSection from "@/components/AboutMeSection";
 import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import LongFormSection from "@/components/LongFormSection";
@@ -14,7 +14,7 @@ export default function Home() {
       <HeroSection />
       <ShowreelSection />
       <ShowcaseSection />
-      <AboutSection />
+      <AboutMeSection />
       <ShortFormSection />
       <LongFormSection />
       <Footer />
