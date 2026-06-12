@@ -15,8 +15,8 @@ export default function Home() {
       <ShowreelSection />
       <ShowcaseSection />
       <AboutMeSection />
-      <ShortFormSection />
-      <LongFormSection />
+      {/* <ShortFormSection /> */}
+      {/* <LongFormSection /> */}
       <Footer />
     </div>
   );

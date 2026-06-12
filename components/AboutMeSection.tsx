@@ -50,7 +50,39 @@ function Grain({ id, opacity = 0.04 }: { id: string; opacity?: number }) {
 
 /* ─── Section ─────────────────────────────────────────────────────── */
 export default function AboutMeSection() {
-  const sectionRef = useRef<HTMLElement>(null);
+  const sectionRef      = useRef<HTMLElement>(null);
+  const portraitCardRef = useRef<HTMLDivElement>(null);
+  const portraitGlareRef = useRef<HTMLDivElement>(null);
+
+  const handleTiltMove = (e: React.MouseEvent) => {
+    const el = portraitCardRef.current;
+    if (!el) return;
+    const { left, top, width, height } = el.getBoundingClientRect();
+    const x =  (e.clientX - left) / width;
+    const y =  (e.clientY - top)  / height;
+    const rotY =  (x - 0.5) * 2 * 10;
+    const rotX = -(y - 0.5) * 2 * 10;
+    el.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    if (portraitGlareRef.current) {
+      portraitGlareRef.current.style.background =
+        `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(255,255,255,0.07) 0%, transparent 60%)`;
+    }
+  };
+
+  const handleTiltEnter = () => {
+    if (portraitCardRef.current)
+      portraitCardRef.current.style.transition = "transform 0.08s ease";
+  };
+
+  const handleTiltLeave = () => {
+    const el = portraitCardRef.current;
+    if (el) {
+      el.style.transition = "transform 0.65s cubic-bezier(0.23,1,0.32,1)";
+      el.style.transform  = "rotateX(0deg) rotateY(0deg)";
+    }
+    if (portraitGlareRef.current)
+      portraitGlareRef.current.style.background = "transparent";
+  };
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -123,19 +155,6 @@ export default function AboutMeSection() {
           trigger: ".about-split",
           start: "top 60%",
           once: true,
-        },
-      });
-
-      // Portrait parallax — video drifts up as section scrolls
-      gsap.to(".portrait-video", {
-        y: -65,
-        scale: 1.06,
-        ease: "none",
-        scrollTrigger: {
-          trigger: ".about-split",
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true,
         },
       });
 
@@ -436,7 +455,7 @@ export default function AboutMeSection() {
 
             <div
               className="portrait-frame relative"
-              style={{ width: "clamp(200px, 30vw, 360px)", opacity: 0 }}
+              style={{ width: "clamp(200px, 30vw, 360px)", opacity: 0, perspective: "900px" }}
             >
               {/* Film perforations — left */}
               <div className="absolute -left-6 top-0 bottom-0 flex flex-col justify-between py-2">
@@ -445,19 +464,54 @@ export default function AboutMeSection() {
                 ))}
               </div>
 
+              {/* Tilt target */}
               <div
+                ref={portraitCardRef}
                 className="relative overflow-hidden"
-                style={{ aspectRatio: "2/3", border: "1px solid rgba(255,255,255,0.07)" }}
+                style={{
+                  aspectRatio: "2/3",
+                  border: "1px solid rgba(255,255,255,0.07)",
+                  willChange: "transform",
+                  boxShadow: "0 30px 80px rgba(0,0,0,0.7)",
+                }}
+                onMouseMove={handleTiltMove}
+                onMouseEnter={handleTiltEnter}
+                onMouseLeave={handleTiltLeave}
               >
-                <video
-                  className="portrait-video absolute inset-0 h-full w-full object-cover"
-                  src="/assets/videos/hero.mp4"
-                  autoPlay muted loop playsInline
-                  style={{ filter: "grayscale(100%) contrast(1.3) brightness(0.55)", scale: 1.1 }}
+                {/* Cinematic placeholder — dark gradient */}
+                <div className="absolute inset-0"
+                  style={{ background: "linear-gradient(160deg, #0e0b04 0%, #110e05 35%, #0a0905 65%, #060606 100%)" }}
                 />
 
-                {/* Heavy grain on portrait */}
-                <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.15]" aria-hidden>
+                {/* Amber spotlight — bottom center */}
+                <div className="absolute inset-0"
+                  style={{ background: "radial-gradient(ellipse at 50% 85%, rgba(250,204,21,0.13) 0%, transparent 60%)" }}
+                />
+
+                {/* Ghost "AP" monogram */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span
+                    className={`${displayFont.className} select-none`}
+                    style={{
+                      fontSize: "clamp(6rem, 18vw, 12rem)",
+                      color: "transparent",
+                      WebkitTextStroke: "1px rgba(250,204,21,0.09)",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    AP
+                  </span>
+                </div>
+
+                {/* Scan lines — film texture */}
+                <div className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: "repeating-linear-gradient(0deg, rgba(0,0,0,0.09) 0px, rgba(0,0,0,0.09) 1px, transparent 1px, transparent 3px)",
+                  }}
+                />
+
+                {/* Heavy grain */}
+                <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.18]" aria-hidden>
                   <defs>
                     <filter id="pgrain">
                       <feTurbulence type="fractalNoise" baseFrequency="0.66" numOctaves="4" stitchTiles="stitch" />
@@ -469,11 +523,13 @@ export default function AboutMeSection() {
 
                 {/* Vignette */}
                 <div className="absolute inset-0"
-                  style={{ background: "radial-gradient(ellipse at center, transparent 25%, rgba(0,0,0,0.75) 100%)" }} />
+                  style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.65) 100%)" }}
+                />
 
-                {/* Bottom fade into section bg */}
+                {/* Bottom fade */}
                 <div className="absolute inset-x-0 bottom-0 h-2/5"
-                  style={{ background: "linear-gradient(to top, rgba(6,6,6,0.97) 0%, transparent 100%)" }} />
+                  style={{ background: "linear-gradient(to top, rgba(6,6,6,0.97) 0%, transparent 100%)" }}
+                />
 
                 {/* Amber corner brackets */}
                 <div className="pointer-events-none absolute left-0 top-0 h-10 w-10 border-l-2 border-t-2 border-amber-400/45" />
@@ -483,11 +539,18 @@ export default function AboutMeSection() {
 
                 {/* Name plate */}
                 <div className="absolute inset-x-0 bottom-0 p-5">
-                  <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-white/25">Mumbai, India</p>
+                  <p className="font-mono text-[8px] uppercase tracking-[0.25em] text-white/25">Bangalore, India</p>
                   <p className={`${displayFont.className} text-[1.5rem] tracking-wide text-white leading-none mt-1`}>
                     Aniket Patil
                   </p>
                 </div>
+
+                {/* Glare layer */}
+                <div
+                  ref={portraitGlareRef}
+                  className="pointer-events-none absolute inset-0"
+                  style={{ mixBlendMode: "screen" }}
+                />
               </div>
 
               {/* Film perforations — right */}
