@@ -23,6 +23,42 @@ const LONG_FORM = [
   { title: "Event Recap Film",   duration: "8 min",  platform: "YouTube",    views: "320K", type: "Event Film",     tags: ["Event", "Highlights"] },
 ];
 
+/* ─── Tilt hook ───────────────────────────────────────────────────── */
+function useTilt(maxTilt = 12) {
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const glareRef = useRef<HTMLDivElement>(null);
+
+  const onMouseMove = (e: React.MouseEvent) => {
+    const el = cardRef.current;
+    if (!el) return;
+    const { left, top, width, height } = el.getBoundingClientRect();
+    const x =  (e.clientX - left) / width;
+    const y =  (e.clientY - top)  / height;
+    const rotY =  (x - 0.5) * 2 * maxTilt;
+    const rotX = -(y - 0.5) * 2 * maxTilt;
+    el.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    if (glareRef.current) {
+      glareRef.current.style.background =
+        `radial-gradient(circle at ${x * 100}% ${y * 100}%, rgba(255,255,255,0.09) 0%, transparent 65%)`;
+    }
+  };
+
+  const onMouseEnter = () => {
+    if (cardRef.current)
+      cardRef.current.style.transition = "transform 0.08s ease";
+  };
+
+  const onMouseLeave = () => {
+    if (cardRef.current) {
+      cardRef.current.style.transition = "transform 0.65s cubic-bezier(0.23,1,0.32,1)";
+      cardRef.current.style.transform  = "rotateX(0deg) rotateY(0deg)";
+    }
+    if (glareRef.current) glareRef.current.style.background = "transparent";
+  };
+
+  return { cardRef, glareRef, onMouseMove, onMouseEnter, onMouseLeave };
+}
+
 /* ─── Drag carousel ───────────────────────────────────────────────── */
 function DragCarousel({ children, className }: { children: React.ReactNode; className?: string }) {
   const ref      = useRef<HTMLDivElement>(null);
@@ -77,126 +113,124 @@ function ShortCard({
   setHoveredIndex: (i: number | null) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isHovered  = hoveredIndex === index;
-  const isDimmed   = hoveredIndex !== null && !isHovered;
+  const { cardRef, glareRef, onMouseMove, onMouseEnter: tiltEnter, onMouseLeave: tiltLeave } = useTilt(12);
+  const isHovered = hoveredIndex === index;
+  const isDimmed  = hoveredIndex !== null && !isHovered;
 
-  const onEnter = () => {
-    setHoveredIndex(index);
-    videoRef.current?.play();
-  };
+  const onEnter = () => { setHoveredIndex(index); videoRef.current?.play(); tiltEnter(); };
   const onLeave = () => {
     setHoveredIndex(null);
     if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
+    tiltLeave();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, ease, delay: index * 0.07 }}
-      className="relative shrink-0 overflow-hidden"
+    <div
+      className="shrink-0"
       style={{
         width:   featured ? 280 : 220,
         height:  featured ? 500 : 390,
         opacity: isDimmed ? 0.35 : 1,
-        transition: "opacity 0.3s ease, transform 0.35s ease, box-shadow 0.35s ease",
-        transform: isHovered ? "scale(1.05)" : "scale(1)",
-        boxShadow: isHovered ? "0 0 40px 4px rgba(250,204,21,0.18)" : "none",
-        border: "1px solid rgba(255,255,255,0.06)",
+        transition: "opacity 0.3s ease",
       }}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
     >
-      {/* Thumbnail / video */}
-      <video
-        ref={videoRef}
-        src="/assets/videos/hero.mp4"
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ transition: "transform 0.4s ease", transform: isHovered ? "scale(1.08)" : "scale(1)" }}
-      />
-
-      {/* Base overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isHovered
-            ? "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.05) 100%)"
-            : "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%)",
-          transition: "background 0.3s ease",
-        }}
-      />
-
-      {/* Featured badge */}
-      {featured && (
-        <div className="absolute left-3 top-3">
-          <span
-            className="font-mono text-[8px] tracking-[0.2em] uppercase px-2 py-1"
-            style={{ background: "#FACC15", color: "#000" }}
-          >
-            Featured
-          </span>
-        </div>
-      )}
-
-      {/* Hover: amber corner accents */}
-      {isHovered && (
-        <>
-          <div className="pointer-events-none absolute left-0 top-0 h-6 w-6 border-l border-t border-amber-400/70" />
-          <div className="pointer-events-none absolute right-0 top-0 h-6 w-6 border-r border-t border-amber-400/70" />
-        </>
-      )}
-
-      {/* Bottom info */}
-      <div className="absolute inset-x-0 bottom-0 p-4">
-        {/* Tags — slide up on hover */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease, delay: index * 0.07 }}
+        className="h-full w-full"
+        style={{ perspective: "900px" }}
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+        onMouseMove={onMouseMove}
+      >
+        {/* Tilt target — overflow-hidden lives here */}
         <div
-          className="mb-3 flex flex-wrap gap-1.5"
+          ref={cardRef}
+          className="relative h-full w-full overflow-hidden"
           style={{
-            opacity: isHovered ? 1 : 0,
-            transform: isHovered ? "translateY(0)" : "translateY(8px)",
-            transition: "opacity 0.25s ease, transform 0.25s ease",
+            border: "1px solid rgba(255,255,255,0.06)",
+            boxShadow: isHovered
+              ? "0 24px 60px rgba(0,0,0,0.7), 0 0 40px rgba(250,204,21,0.18)"
+              : "0 4px 24px rgba(0,0,0,0.5)",
+            transition: "box-shadow 0.35s ease",
+            willChange: "transform",
           }}
         >
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="font-mono text-[7px] tracking-[0.15em] uppercase px-2 py-1"
-              style={{ border: "1px solid rgba(250,204,21,0.4)", color: "rgba(250,204,21,0.75)" }}
+          <video
+            ref={videoRef}
+            src="/assets/videos/hero.mp4"
+            muted loop playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ transition: "transform 0.4s ease", transform: isHovered ? "scale(1.08)" : "scale(1)" }}
+          />
+
+          <div
+            className="absolute inset-0"
+            style={{
+              background: isHovered
+                ? "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.05) 100%)"
+                : "linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0) 100%)",
+              transition: "background 0.3s ease",
+            }}
+          />
+
+          {/* Glare overlay */}
+          <div ref={glareRef} className="pointer-events-none absolute inset-0" style={{ mixBlendMode: "screen" }} />
+
+          {featured && (
+            <div className="absolute left-3 top-3">
+              <span className="font-mono text-[8px] tracking-[0.2em] uppercase px-2 py-1" style={{ background: "#FACC15", color: "#000" }}>
+                Featured
+              </span>
+            </div>
+          )}
+
+          {isHovered && (
+            <>
+              <div className="pointer-events-none absolute left-0 top-0 h-6 w-6 border-l border-t border-amber-400/70" />
+              <div className="pointer-events-none absolute right-0 top-0 h-6 w-6 border-r border-t border-amber-400/70" />
+            </>
+          )}
+
+          <div className="absolute inset-x-0 bottom-0 p-4">
+            <div
+              className="mb-3 flex flex-wrap gap-1.5"
+              style={{
+                opacity: isHovered ? 1 : 0,
+                transform: isHovered ? "translateY(0)" : "translateY(8px)",
+                transition: "opacity 0.25s ease, transform 0.25s ease",
+              }}
             >
-              {tag}
-            </span>
-          ))}
+              {item.tags.map((tag) => (
+                <span key={tag} className="font-mono text-[7px] tracking-[0.15em] uppercase px-2 py-1"
+                  style={{ border: "1px solid rgba(250,204,21,0.4)", color: "rgba(250,204,21,0.75)" }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/35 mb-1">{item.platform}</p>
+            <h3 className={`${displayFont.className} leading-none text-white tracking-[0.02em] uppercase`}
+              style={{ fontSize: featured ? "1.6rem" : "1.3rem" }}>
+              {item.title}
+            </h3>
+            <div
+              className="mt-2 flex items-center gap-3"
+              style={{
+                opacity: isHovered ? 1 : 0,
+                transform: isHovered ? "translateY(0)" : "translateY(6px)",
+                transition: "opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s",
+              }}
+            >
+              <span className="font-mono text-[9px] text-white/55">{item.views} Views</span>
+              <span className="h-px w-3 bg-white/20" />
+              <span className="font-mono text-[9px]" style={{ color: "#FACC15" }}>{item.retention} Retention</span>
+            </div>
+          </div>
         </div>
-
-        <p className="font-mono text-[8px] uppercase tracking-[0.2em] text-white/35 mb-1">
-          {item.platform}
-        </p>
-        <h3
-          className={`${displayFont.className} leading-none text-white tracking-[0.02em] uppercase`}
-          style={{ fontSize: featured ? "1.6rem" : "1.3rem" }}
-        >
-          {item.title}
-        </h3>
-
-        {/* Stats — slide up on hover */}
-        <div
-          className="mt-2 flex items-center gap-3"
-          style={{
-            opacity: isHovered ? 1 : 0,
-            transform: isHovered ? "translateY(0)" : "translateY(6px)",
-            transition: "opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s",
-          }}
-        >
-          <span className="font-mono text-[9px] text-white/55">{item.views} Views</span>
-          <span className="h-px w-3 bg-white/20" />
-          <span className="font-mono text-[9px]" style={{ color: "#FACC15" }}>{item.retention} Retention</span>
-        </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
@@ -209,118 +243,121 @@ function LongCard({
   hoveredIndex: number | null;
   setHoveredIndex: (i: number | null) => void;
 }) {
-  const videoRef  = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const { cardRef, glareRef, onMouseMove, onMouseEnter: tiltEnter, onMouseLeave: tiltLeave } = useTilt(8);
   const isHovered = hoveredIndex === index;
   const isDimmed  = hoveredIndex !== null && !isHovered;
 
-  const onEnter = () => {
-    setHoveredIndex(index);
-    videoRef.current?.play();
-  };
+  const onEnter = () => { setHoveredIndex(index); videoRef.current?.play(); tiltEnter(); };
   const onLeave = () => {
     setHoveredIndex(null);
     if (videoRef.current) { videoRef.current.pause(); videoRef.current.currentTime = 0; }
+    tiltLeave();
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, ease, delay: index * 0.07 }}
-      className="relative shrink-0 overflow-hidden"
+    <div
+      className="shrink-0"
       style={{
-        width:   480,
-        height:  270,
+        width: 480,
+        height: 270,
         opacity: isDimmed ? 0.35 : 1,
-        transition: "opacity 0.3s ease, transform 0.35s ease, box-shadow 0.35s ease",
-        transform: isHovered ? "scale(1.04)" : "scale(1)",
-        boxShadow: isHovered ? "0 0 40px 4px rgba(250,204,21,0.15)" : "none",
-        border: "1px solid rgba(255,255,255,0.06)",
+        transition: "opacity 0.3s ease",
       }}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
     >
-      <video
-        ref={videoRef}
-        src="/assets/videos/hero.mp4"
-        muted
-        loop
-        playsInline
-        className="absolute inset-0 h-full w-full object-cover"
-        style={{ transition: "transform 0.4s ease", transform: isHovered ? "scale(1.06)" : "scale(1)" }}
-      />
-
-      {/* Overlay */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isHovered
-            ? "linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.05) 100%)"
-            : "linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%)",
-          transition: "background 0.3s ease",
-        }}
-      />
-
-      {/* Amber corner accents on hover */}
-      {isHovered && (
-        <>
-          <div className="pointer-events-none absolute left-0 top-0 h-6 w-6 border-l border-t border-amber-400/60" />
-          <div className="pointer-events-none absolute bottom-0 right-0 h-6 w-6 border-b border-r border-amber-400/60" />
-        </>
-      )}
-
-      {/* Content */}
-      <div className="absolute inset-0 flex flex-col justify-end p-5">
-        {/* Tags */}
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, ease, delay: index * 0.07 }}
+        className="h-full w-full"
+        style={{ perspective: "900px" }}
+        onMouseEnter={onEnter}
+        onMouseLeave={onLeave}
+        onMouseMove={onMouseMove}
+      >
         <div
-          className="mb-3 flex flex-wrap gap-1.5"
+          ref={cardRef}
+          className="relative h-full w-full overflow-hidden"
           style={{
-            opacity: isHovered ? 1 : 0,
-            transform: isHovered ? "translateY(0)" : "translateY(8px)",
-            transition: "opacity 0.25s ease, transform 0.25s ease",
+            border: "1px solid rgba(255,255,255,0.06)",
+            boxShadow: isHovered
+              ? "0 24px 60px rgba(0,0,0,0.7), 0 0 40px rgba(250,204,21,0.15)"
+              : "0 4px 24px rgba(0,0,0,0.5)",
+            transition: "box-shadow 0.35s ease",
+            willChange: "transform",
           }}
         >
-          {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="font-mono text-[7px] tracking-[0.15em] uppercase px-2 py-1"
-              style={{ border: "1px solid rgba(250,204,21,0.4)", color: "rgba(250,204,21,0.7)" }}
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
+          <video
+            ref={videoRef}
+            src="/assets/videos/hero.mp4"
+            muted loop playsInline
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{ transition: "transform 0.4s ease", transform: isHovered ? "scale(1.06)" : "scale(1)" }}
+          />
 
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="font-mono text-[8px] uppercase tracking-[0.22em] text-white/30 mb-1">
-              {item.type}
-            </p>
-            <h3
-              className={`${displayFont.className} text-white leading-none tracking-[0.02em] uppercase`}
-              style={{ fontSize: "1.55rem" }}
-            >
-              {item.title}
-            </h3>
-          </div>
-
-          {/* Meta — appears on hover */}
           <div
-            className="text-right"
+            className="absolute inset-0"
             style={{
-              opacity: isHovered ? 1 : 0,
-              transform: isHovered ? "translateX(0)" : "translateX(8px)",
-              transition: "opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s",
+              background: isHovered
+                ? "linear-gradient(135deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.05) 100%)"
+                : "linear-gradient(135deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.15) 70%, rgba(0,0,0,0) 100%)",
+              transition: "background 0.3s ease",
             }}
-          >
-            <p className="font-mono text-[9px] text-white/50">{item.duration}</p>
-            <p className="font-mono text-[9px]" style={{ color: "#FACC15" }}>{item.views} Views</p>
-            <p className="font-mono text-[8px] text-white/30">{item.platform}</p>
+          />
+
+          {/* Glare overlay */}
+          <div ref={glareRef} className="pointer-events-none absolute inset-0" style={{ mixBlendMode: "screen" }} />
+
+          {isHovered && (
+            <>
+              <div className="pointer-events-none absolute left-0 top-0 h-6 w-6 border-l border-t border-amber-400/60" />
+              <div className="pointer-events-none absolute bottom-0 right-0 h-6 w-6 border-b border-r border-amber-400/60" />
+            </>
+          )}
+
+          <div className="absolute inset-0 flex flex-col justify-end p-5">
+            <div
+              className="mb-3 flex flex-wrap gap-1.5"
+              style={{
+                opacity: isHovered ? 1 : 0,
+                transform: isHovered ? "translateY(0)" : "translateY(8px)",
+                transition: "opacity 0.25s ease, transform 0.25s ease",
+              }}
+            >
+              {item.tags.map((tag) => (
+                <span key={tag} className="font-mono text-[7px] tracking-[0.15em] uppercase px-2 py-1"
+                  style={{ border: "1px solid rgba(250,204,21,0.4)", color: "rgba(250,204,21,0.7)" }}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="font-mono text-[8px] uppercase tracking-[0.22em] text-white/30 mb-1">{item.type}</p>
+                <h3 className={`${displayFont.className} text-white leading-none tracking-[0.02em] uppercase`}
+                  style={{ fontSize: "1.55rem" }}>
+                  {item.title}
+                </h3>
+              </div>
+              <div
+                className="text-right"
+                style={{
+                  opacity: isHovered ? 1 : 0,
+                  transform: isHovered ? "translateX(0)" : "translateX(8px)",
+                  transition: "opacity 0.3s ease 0.05s, transform 0.3s ease 0.05s",
+                }}
+              >
+                <p className="font-mono text-[9px] text-white/50">{item.duration}</p>
+                <p className="font-mono text-[9px]" style={{ color: "#FACC15" }}>{item.views} Views</p>
+                <p className="font-mono text-[8px] text-white/30">{item.platform}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+    </div>
   );
 }
 
